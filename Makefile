@@ -1,5 +1,5 @@
 CC=g++
-CFLAGS=-c -g -O0 -Wall -I./glm/ -DGL_GLEXT_PROTOTYPES
+CFLAGS=-c -g -O0 -Wall -I./glm/ -DGL_GLEXT_PROTOTYPES -DGLX_GLXEXT_PROTOTYPES
 LDFLAGS=-lX11 -lGL -lGLU
 SOURCES=main.C Cube.C Shader.C Stopwatch.C
 OBJECTS=$(SOURCES:.C=.o)

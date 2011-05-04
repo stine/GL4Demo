@@ -7,6 +7,7 @@
 #include <GL/gl.h>
 #include <GL/glx.h>
 #include <GL/glext.h>
+#include <GL/glxext.h>
 
 #include "config.h"
 #include "Cube.h"
@@ -149,11 +150,10 @@ int main (int argc, char ** argv) {
 
   // Check for the GLX_ARB_create_context extension string and corresponding function.
   // If either is not present, use GLX 1.3 context creation method.
-  glXCreateContextAttribsARBProc glXCreateContextAttribsARB = 0;
-  glXCreateContextAttribsARB = (glXCreateContextAttribsARBProc)
-    glXGetProcAddressARB( (const GLubyte *) "glXCreateContextAttribsARB" );
-  if (!isExtensionSupported(glxExts, "GLX_ARB_create_context") ||
-      !glXCreateContextAttribsARB) {
+  //  glXCreateContextAttribsARBProc glXCreateContextAttribsARB = 0;
+  //  glXCreateContextAttribsARB = (glXCreateContextAttribsARBProc)
+  //    glXGetProcAddressARB( (const GLubyte *) "glXCreateContextAttribsARB" );
+  if (!isExtensionSupported(glxExts, "GLX_ARB_create_context")) {
     fprintf(stderr, "WARNING: glXCreateContextAttribsARB() not found. Failing back to compatibility.\n");
     ctx = glXCreateNewContext(display, bestFbc, GLX_RGBA_TYPE, 0, True);
   }
