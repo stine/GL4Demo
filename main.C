@@ -226,7 +226,7 @@ int main (int argc, char ** argv) {
 
   Cube cube;
   while (true) {
-    cube.render(0.001f); // HACK: hardcoded value for now.
+    cube.render(0.003f); // HACK: hardcoded value for now.
     glXSwapBuffers (display, win);
   }
 
