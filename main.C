@@ -6,8 +6,8 @@
 #include <X11/Xutil.h>
 #include <GL/gl.h>
 #include <GL/glx.h>
-#include <GL/glext.h>
-#include <GL/glxext.h>
+#include "glext.h"
+#include "glxext.h"
 
 #include "config.h"
 #include "Cube.h"
