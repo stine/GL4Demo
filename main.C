@@ -6,6 +6,7 @@
 #include <X11/Xutil.h>
 #include <GL/gl.h>
 #include <GL/glx.h>
+#include <GL/glext.h>
 
 #include "config.h"
 #include "Cube.h"
@@ -161,16 +162,14 @@ int main (int argc, char ** argv) {
     int context_attribs[] = {
       GLX_CONTEXT_MAJOR_VERSION_ARB, 4,
       GLX_CONTEXT_MINOR_VERSION_ARB, 1,
+      GLX_CONTEXT_FLAGS_ARB, GLX_CONTEXT_FORWARD_COMPATIBLE_BIT_ARB,      
       None
     };
     ctx = glXCreateContextAttribsARB(display, bestFbc, 0, True, context_attribs);
     
     // Sync to ensure any errors generated are processed.
     XSync(display, False);
-    if (!ctxErrorOccurred && ctx) {
-      fprintf(stderr, "INFO: Created GL 4.1 context.\n");
-    }
-    else {
+    if (ctxErrorOccurred || !ctx) {
       // Couldn't create a core GL context.  Fall back to old-style 2.x context.
       // When a context version below 4.0 is requested, implementations will
       // return the newest context version compatible with OpenGL versions less
@@ -179,6 +178,8 @@ int main (int argc, char ** argv) {
       context_attribs[1] = 1;
       // GLX_CONTEXT_MINOR_VERSION_ARB = 0
       context_attribs[3] = 0;
+      // Do not force a core context.
+      context_attribs[4] = None;
 
       ctxErrorOccurred = false;
       fprintf(stderr, "WARNING: Failed to create core GL context. Failing back to compatibility.\n");
@@ -194,14 +195,36 @@ int main (int argc, char ** argv) {
     exit(1);
   }
     
-  // Verifying that context is a direct context
+  // Print out info on the context retrieved.
+  bool warn = false;
+  char status[7];
+  char direct[8];
+  char profile[13];
+  GLint profileMask;
+  glXMakeCurrent(display, win, ctx);
   if (!glXIsDirect(display, ctx)) {
-    fprintf(stderr, "WARNING: GLX rendering context is Indirect.\n");
+    warn = true;
+    snprintf(direct, 8, "INDIRECT");
+  }
+  else
+    snprintf(direct, 8, "DIRECT");
+  glGetIntegerv(GL_CONTEXT_PROFILE_MASK, &profileMask);
+  if (profileMask & GL_CONTEXT_CORE_PROFILE_BIT)
+    snprintf(profile, 13, "CORE");
+  else if (profileMask & GL_CONTEXT_COMPATIBILITY_PROFILE_BIT) {
+    warn = true;
+    snprintf(profile, 13, "COMPATIBILITY");
   }
   else {
-    fprintf(stderr, "INFO: GLX rendering context is Direct.\n");
+    fprintf(stderr, "ERROR: Failed to retrieve OpenGL context information.\n");
+    exit(1);
   }
-  glXMakeCurrent(display, win, ctx);
+  if (warn)
+    snprintf(status, 7, "WARNING");
+  else
+    snprintf(status, 7, "INFO");
+  fprintf(stderr, "%s: GL context is %s %s profile version %s.\n",
+	  status, direct, profile, glGetString(GL_VERSION));
 
   //---------------------------------------------------------------------------
   // INITIALIZATION IS COMPLETE
