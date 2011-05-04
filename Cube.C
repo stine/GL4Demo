@@ -36,7 +36,7 @@ Cube::Cube()
   glCullFace(GL_BACK);
 
   // Generate Cube geometry and store in _indices, _position3, and _color4.
-  static const int position[] =
+  static const float position[] =
     { -1.0f, -1.0f,  1.0f,
        1.0f, -1.0f,  1.0f,
        1.0f,  1.0f,  1.0f,
@@ -56,7 +56,7 @@ Cube::Cube()
       1.0f, 1.0f, 0.0f, 1.0f,
       1.0f, 0.0f, 1.0f, 1.0f
     };
-  static const int index[] =
+  static const unsigned index[] =
     { 0, 1, 2,
       0, 2, 3,
       1, 5, 6,
