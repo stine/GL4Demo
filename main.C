@@ -12,10 +12,6 @@
 #include "config.h"
 #include "Cube.h"
 
-#define GLX_CONTEXT_MAJOR_VERSION_ARB    0x2091
-#define GLX_CONTEXT_MINOR_VERSION_ARB    0x2092
-typedef GLXContext (*glXCreateContextAttribsARBProc)(Display*, GLXFBConfig, GLXContext, Bool, const int*);
-
 // Helper to check for extension string presence.  Adapted from:
 //   http://www.opengl.org/resources/features/OGLextensions/
 // 'extList' is a string containing all extension strings, separated by spaces.
@@ -161,7 +157,7 @@ int main (int argc, char ** argv) {
   else {
     int context_attribs[] = {
       GLX_CONTEXT_MAJOR_VERSION_ARB, 4,
-      GLX_CONTEXT_MINOR_VERSION_ARB, 1,
+      GLX_CONTEXT_MINOR_VERSION_ARB, 0,
       GLX_CONTEXT_FLAGS_ARB, GLX_CONTEXT_FORWARD_COMPATIBLE_BIT_ARB,      
       None
     };

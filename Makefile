@@ -1,6 +1,6 @@
 CC=g++
 CFLAGS=-c -g -O0 -Wall -I./glm/ -DGL_GLEXT_PROTOTYPES -DGLX_GLXEXT_PROTOTYPES
-LDFLAGS=-lGL
+LDFLAGS=-L/usr/lib/fglrx -lGL
 SOURCES=main.C Cube.C Shader.C Stopwatch.C
 OBJECTS=$(SOURCES:.C=.o)
 EXECUTABLE=GL4Demo
