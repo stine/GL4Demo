@@ -129,7 +129,7 @@ int main (int argc, char ** argv) {
   vi = 0;
 
   // Set the window name, and make it active.
-  XStoreName(display, win, "GL 4.1 Window");
+  XStoreName(display, win, "GL 4.0 Window");
   XMapWindow(display, win);
 
   // Get the default screen's GLX extension list
@@ -158,6 +158,7 @@ int main (int argc, char ** argv) {
     int context_attribs[] = {
       GLX_CONTEXT_MAJOR_VERSION_ARB, 4,
       GLX_CONTEXT_MINOR_VERSION_ARB, 0,
+      GLX_CONTEXT_PROFILE_MASK_ARB, GLX_CONTEXT_CORE_PROFILE_BIT_ARB,
       GLX_CONTEXT_FLAGS_ARB, GLX_CONTEXT_FORWARD_COMPATIBLE_BIT_ARB,      
       None
     };
@@ -193,33 +194,29 @@ int main (int argc, char ** argv) {
     
   // Print out info on the context retrieved.
   bool warn = false;
-  char status[7];
-  char direct[8];
-  char profile[13];
+  char status[8];
+  char direct[9];
+  char profile[14];
   GLint profileMask;
   glXMakeCurrent(display, win, ctx);
   if (!glXIsDirect(display, ctx)) {
     warn = true;
-    snprintf(direct, 8, "INDIRECT");
+    snprintf(direct, 9, "INDIRECT");
   }
   else
-    snprintf(direct, 8, "DIRECT");
+    snprintf(direct, 9, "DIRECT");
   glGetIntegerv(GL_CONTEXT_PROFILE_MASK, &profileMask);
   if (profileMask & GL_CONTEXT_CORE_PROFILE_BIT)
-    snprintf(profile, 13, "CORE");
-  else if (profileMask & GL_CONTEXT_COMPATIBILITY_PROFILE_BIT) {
-    warn = true;
-    snprintf(profile, 13, "COMPATIBILITY");
-  }
+    snprintf(profile, 14, "CORE");
   else {
-    fprintf(stderr, "ERROR: Failed to retrieve OpenGL context information.\n");
-    exit(1);
+    warn = true;
+    snprintf(profile, 14, "COMPATIBILITY");
   }
   if (warn)
-    snprintf(status, 7, "WARNING");
+    snprintf(status, 8, "WARNING");
   else
-    snprintf(status, 7, "INFO");
-  fprintf(stderr, "%s: GL context is %s %s profile version %s.\n",
+    snprintf(status, 8, "INFO");
+  fprintf(stderr, "%s: GL context is %s %s profile version \'%s\'.\n",
 	  status, direct, profile, glGetString(GL_VERSION));
 
   //---------------------------------------------------------------------------
