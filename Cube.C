@@ -123,9 +123,9 @@ Cube::Cube()
   glBindBuffer(GL_ARRAY_BUFFER, 0);
 
   // Populate the default modelview and projection matrices.
-  _modelViewMatrix  = glm::mat4(1.0f);
+  _modelViewMatrix  = glm::translate(glm::mat4(1.0), glm::vec3(0.0, 0.0, -10.0));
   _projectionMatrix = glm::mat4(1.0f) * glm::perspective
-    (25.0f, (float)RENDER_WIDTH /(float)RENDER_HEIGHT, 1.0f, 65.0f);
+    (25.0f, (float)RENDER_WIDTH /(float)RENDER_HEIGHT, 1.0f, 14.0f);
 
   return;
 }
@@ -142,15 +142,19 @@ Cube::~Cube()
 
 void Cube::render(float secondsElapsed)
 {
+  // Number of degrees to rotate around the primary axis this frame.
+  float degrees = secondsElapsed * 50.0f;  // 50 degrees per second.
+
   // clear the screen
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
   // rotate cube
-  _modelViewMatrix = glm::translate(_modelViewMatrix, glm::vec3(0.0, 0.0, -10.0));
-  _modelViewMatrix = glm::rotate(_modelViewMatrix, secondsElapsed, glm::vec3(0.0f, 1.0f, 0.0f));
-  _modelViewMatrix = glm::rotate(_modelViewMatrix, secondsElapsed/3, glm::vec3(1.0f, 0.0f, 0.0f));
+  _modelViewMatrix = glm::rotate(_modelViewMatrix, degrees, glm::vec3(0.0f, 1.0f, 0.0f));
+  _modelViewMatrix = glm::rotate(_modelViewMatrix, degrees/3, glm::vec3(1.0f, 0.0f, 0.0f));
+  _modelViewMatrix = glm::rotate(_modelViewMatrix, degrees/10, glm::vec3(0.0f, 0.0f, 1.0f));
   glm::mat4 modelViewProjectionMatrix = _projectionMatrix * _modelViewMatrix;
-  _modelViewMatrix = glm::translate(_modelViewMatrix, glm::vec3(0.0, 0.0, 10.0));
+  glUniformMatrix4fv(glGetUniformLocation(_programHandle, "modelViewMatrix"),
+		     1, false, &_modelViewMatrix[0][0]);
   glUniformMatrix4fv(glGetUniformLocation(_programHandle, "modelViewProjectionMatrix"),
 		     1, false, &modelViewProjectionMatrix[0][0]);
   

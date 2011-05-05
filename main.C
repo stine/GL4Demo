@@ -11,6 +11,7 @@
 
 #include "config.h"
 #include "Cube.h"
+#include "Stopwatch.h"
 
 // Helper to check for extension string presence.  Adapted from:
 //   http://www.opengl.org/resources/features/OGLextensions/
@@ -225,8 +226,15 @@ int main (int argc, char ** argv) {
   //---------------------------------------------------------------------------  
 
   Cube cube;
+  Stopwatch stopwatch;
+  float secondsElapsed = 0.0f;
   while (true) {
-    cube.render(0.003f); // HACK: hardcoded value for now.
+    secondsElapsed = stopwatch.secondsElapsed();
+    stopwatch.start();
+
+    // Draw the scene.
+    cube.render(secondsElapsed);
+
     glXSwapBuffers (display, win);
   }
 
