@@ -3,6 +3,7 @@
 
 #include <vector>
 #include <glm/glm.hpp>
+#include <GL/gl.h>
 
 class Cube {
  public:
@@ -18,7 +19,7 @@ class Cube {
   unsigned int _colorsVbo;
 
   // OpenGL shader handle
-  int _programHandle;
+  GLuint _programHandle;
 
   // model data
   std::vector<unsigned> _indices;

@@ -1,120 +1,179 @@
-// Note: this file is my shameful hack. :(
+// Shader.C
+// Author: Matt Stine
 
-#include "Shader.h"
 #include <GL/gl.h>
+
+#include <string>
+#include <iterator>
+#include <fstream>
 #include <iostream>
-#include <stdio.h>
+#include <stdexcept>
 
-#define GL_TESS_CONTROL_SHADER    0x8E88
-#define GL_TESS_EVALUATION_SHADER 0x8E87
+#include "glext.h"
+#include "Shader.h"
 
-char * shader::fileRead (const char *fn) {
-  FILE *fp;
-  char *content = NULL;
-  
-  int count = 0;
-  
-  if (fn != NULL) {
-    fp = fopen(fn,"rt");
+using namespace std;
 
-    if (fp != NULL) {
-      fseek(fp, 0, SEEK_END);
-      count = ftell(fp);
-      rewind(fp);
-      
-      if (count > 0) {
-	content = new char[sizeof(char) * (count+1)];
-	count = fread(content,sizeof(char),count,fp);
-	content[count] = '\0';
-      }
-
-      fclose(fp);
-    }
+string shader::readShaderFile (string fileName)
+{
+  // Check for empty filename string.
+  if (!fileName.size()) {
+    throw(invalid_argument("Empty shader filename string."));
   }
-
+  
+  // Attempt to open file.
+  ifstream is(fileName.c_str());
+  is.unsetf(ios::skipws);
+  istream_iterator<char> ii(is);
+  istream_iterator<char> eos;
+  if (!is) {
+    throw(runtime_error("Could not open file " + fileName));
+  }
+  
+  // Load file.
+  string content(ii, eos);
+  is.close();
+  if (!content.size()) {
+    throw(runtime_error("Empty file " + fileName));
+  }
+  
   return content;
 }
 
-bool shader::compileShader(const char *shaderText, GLenum shaderType, GLuint &handle)
-{
-  GLint compileSuccess;
-  GLchar compilerSpew[256];
 
-  char shaderTypeText[16];
+GLuint shader::compileShader(GLenum shaderType,
+			     string shaderText)
+{
+  // Determine the type of shader being created.
+  string shaderTypeText;
   switch (shaderType) {
   case GL_VERTEX_SHADER:
-    snprintf(shaderTypeText, 16, "Vertex");
+    shaderTypeText = "Vertex";
     break;
   case GL_TESS_CONTROL_SHADER:
-    snprintf(shaderTypeText, 16, "TessControl");
+    shaderTypeText = "TessControl";
     break;
   case GL_TESS_EVALUATION_SHADER:
-    snprintf(shaderTypeText, 16, "TessEvaluation");
+    shaderTypeText = "TessEvaluation";
     break;
-  case GL_GEOMETRY_SHADER_ARB:
-    snprintf(shaderTypeText, 16, "Geometry");
+  case GL_GEOMETRY_SHADER:
+    shaderTypeText = "Geometry";
     break;
   case GL_FRAGMENT_SHADER:
-    snprintf(shaderTypeText, 16, "Fragment");
+    shaderTypeText = "Fragment";
     break;
   default:
-    fprintf(stderr, "ERROR: Invalid shader type.\n");
-    return false;
-    break;
+    throw(invalid_argument("Invalid shader type"));
   }
-  
-  handle = glCreateShader(shaderType);
 
-  glShaderSource(handle, 1, &shaderText, 0);
-  glCompileShader(handle);
-  glGetShaderiv(handle, GL_COMPILE_STATUS, &compileSuccess);
-  glGetShaderInfoLog(handle, sizeof(compilerSpew), 0, compilerSpew);
+  // Ensure we're provided with valid shader text.
+  if (!shaderText.size()) {
+    throw(invalid_argument(shaderTypeText + " shader - empty shader text"));
+  }
+
+  // Create the requested type of shader.
+  GLuint shaderHandle = glCreateShader(shaderType);
+  if (!glIsShader(shaderHandle)) {
+    throw(runtime_error(shaderTypeText + " shader - failed to create handle"));
+  }
+
+  // Compile the shader.
+  GLint compileSuccess;
+  GLchar compilerSpew[256];
+  const char *text = shaderText.c_str();
+  glShaderSource(shaderHandle, 1, &text, 0);
+  glCompileShader(shaderHandle);
+  glGetShaderiv(shaderHandle, GL_COMPILE_STATUS, &compileSuccess);
+  glGetShaderInfoLog(shaderHandle, sizeof(compilerSpew), 0, compilerSpew);
   if (!compileSuccess) {
-    fprintf(stderr, "%s Shader Compiling:\n%s\n", shaderTypeText, compilerSpew);
-    return false;
+    glDeleteShader(shaderHandle);
+    throw(runtime_error(shaderTypeText + " shader - compilation error:\n" +
+			compilerSpew));
   }
 
-  return true;
+  return shaderHandle;
 }
 
 
 // NOTE: Currently only supports vertex and fragment shaders.
-GLint shader::loadEffect(const char *vS,
-			 const char *tcS,
-			 const char *teS,
-			 const char *gS,
-			 const char *fS)
+bool shader::loadShader(const char *vS,
+			const char *tcS,
+			const char *teS,
+			const char *gS,
+			const char *fS,
+			GLuint &programHandle)
 {
-  GLuint programHandle = 0;
-  GLint linkSuccess;
-  GLchar compilerSpew[256];
+  GLint  linkSuccess = 1;
+  GLchar linkerSpew[256];
   
   // Load source for each shader
-  const char* vsSource = fileRead(vS);
-  // const char* tcsSource = fileRead(tcS);
-  // const char* tesSource = fileRead(teS);
-  // const char* gsSource = fileRead(gS);
-  const char* fsSource = fileRead(fS);
-  
-  // Compile shader obejcts for each shader
-  GLuint vsHandle;
-  GLuint fsHandle;
-  compileShader(vsSource, GL_VERTEX_SHADER, vsHandle);
-  compileShader(fsSource, GL_FRAGMENT_SHADER, fsHandle);
+  string vsSource;
+  string fsSource;
+  string tcsSource;
+  string tesSource;
+  string gsSource;
+  GLuint vsHandle  = 0;
+  GLuint fsHandle  = 0;
+  GLuint tesHandle = 0;
+  GLuint tcsHandle = 0;
+  GLuint gsHandle  = 0;
 
-  // Link the shaders
-  programHandle = glCreateProgram();
-  glAttachShader(programHandle, vsHandle);
-  // glAttachShader(programHandle, tcsHandle);
-  // glAttachShader(programHandle, tesHandle);
-  // glAttachShader(programHandle, gsHandle);
-  glAttachShader(programHandle, fsHandle);
-  glLinkProgram(programHandle);
-  glGetProgramiv(programHandle, GL_LINK_STATUS, &linkSuccess);
-  glGetProgramInfoLog(programHandle, sizeof(compilerSpew), 0, compilerSpew);
-  if (!linkSuccess) {
-    fprintf(stderr, "ERROR: Shader Linking:\n%s", compilerSpew);
+  try {
+    // Create a program handle.
+    programHandle = glCreateProgram();
+    if (!glIsProgram(programHandle)) {
+      throw(runtime_error("Failed to create shader program handle"));
+    }
+    
+    // Read, compile, and attach each shader object to the program.
+    vsSource = readShaderFile(vS);
+    vsHandle = compileShader(GL_VERTEX_SHADER, vsSource);
+    glAttachShader(programHandle, vsHandle);
+    
+    fsSource = readShaderFile(fS);
+    fsHandle = compileShader(GL_FRAGMENT_SHADER, fsSource);
+    glAttachShader(programHandle, fsHandle);
+    
+    if (tcS) {
+      tcsSource = readShaderFile(tcS);
+      tcsHandle = compileShader(GL_TESS_CONTROL_SHADER, tcsSource);
+      glAttachShader(programHandle, tcsHandle);
+    }
+    
+    if (teS) {
+      tesSource = readShaderFile(teS);
+      tesHandle = compileShader(GL_TESS_EVALUATION_SHADER, tesSource);
+      glAttachShader(programHandle, tesHandle);
+    }
+    
+    if (gS) {
+      gsSource = readShaderFile(gS);
+      gsHandle = compileShader(GL_GEOMETRY_SHADER, gsSource);
+      glAttachShader(programHandle, gsHandle);
+    }
+    
+    // Link the shader program.
+    glLinkProgram(programHandle);
+    glGetProgramiv(programHandle, GL_LINK_STATUS, &linkSuccess);
+    glGetProgramInfoLog(programHandle, sizeof(linkerSpew), 0, linkerSpew);
+    if (!linkSuccess) {
+      throw(runtime_error("Shader program linking error:\n" +
+			  string(linkerSpew)));
+    }
+  }
+  catch (exception &e) {
+    // Handle errors.
+    glDeleteShader(vsHandle);
+    glDeleteShader(fsHandle);
+    glDeleteShader(tesHandle);
+    glDeleteShader(tcsHandle);
+    glDeleteShader(gsHandle);
+    glDeleteProgram(programHandle);
+    programHandle = 0;
+
+    cerr << "ERROR creating shader program: " << e.what() << endl;
+    return false;
   }
   
-  return programHandle;
+  return true;
 }

@@ -4,6 +4,7 @@
 #include <GL/glu.h>
 #include <GL/gl.h>
 #include <GL/glx.h>
+#include "glext.h"
 #include <cmath>
 #include <cstring>
 
@@ -31,7 +32,6 @@ Cube::Cube()
   // Initialize OpenGL state
   glClearColor(0.0, 0.0, 0.0, 1.0);
   glClearDepth(1.0);
-  glShadeModel(GL_SMOOTH);
   glEnable(GL_DEPTH_TEST);
   glCullFace(GL_BACK);
 
@@ -75,9 +75,15 @@ Cube::Cube()
   _indices.assign(index, index + sizeof(index) / sizeof(index[0]));
 
   // Load Shaders and use the loaded program.
-  const char *vS = "shaders/cube.vs";
-  const char *fS = "shaders/cube.fs";
-  _programHandle = shader::loadEffect(vS, NULL, NULL, NULL, fS);
+  // TODO handle status
+  bool status = shader::loadShader("shaders/cube.vs",
+				   NULL,
+				   NULL,
+				   NULL,
+				   "shaders/cube.fs",
+				   _programHandle);
+  if (!status)
+    fprintf(stderr, "SHIT!\n");
   glUseProgram(_programHandle);
 
   // Bind the shader Varying positions.
