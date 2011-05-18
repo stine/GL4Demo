@@ -1,12 +1,12 @@
-#version 400 core
+#version 400
 
 // Incoming Varyings
-in vec4 vColor;
+in vec4 gColor;
 
 // Outgoing (final) Varyings
 out vec4 fragcolor;
 
 void main() {
-  fragcolor = vColor;
+  fragcolor = gColor;
 }
 

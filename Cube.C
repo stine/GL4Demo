@@ -76,11 +76,11 @@ Cube::Cube()
 
   // Load Shaders and use the loaded program.
   // TODO handle status
-  bool status = shader::loadShader("shaders/cube.vs",
+  bool status = shader::loadShader("shaders/poplights.vs",
 				   NULL,
 				   NULL,
-				   NULL,
-				   "shaders/cube.fs",
+				   "shaders/poplights.gs",
+				   "shaders/poplights.fs",
 				   _programHandle);
   if (!status)
     fprintf(stderr, "SHIT!\n");
