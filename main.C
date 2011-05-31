@@ -228,14 +228,18 @@ int main (int argc, char ** argv) {
   Cube cube;
   Stopwatch stopwatch;
   float secondsElapsed = 0.0f;
+  float targetSPF = 1.0f / 60.0f;
   while (true) {
-    secondsElapsed = stopwatch.secondsElapsed();
     stopwatch.start();
 
     // Draw the scene.
     cube.render(secondsElapsed);
-
     glXSwapBuffers (display, win);
+    
+    // Sleep to achieve target framerate.
+    secondsElapsed = stopwatch.secondsElapsed();
+    float sleepTime = targetSPF - secondsElapsed;
+    sleep(sleepTime > 0 ? sleepTime : 0);
   }
 
   //---------------------------------------------------------------------------
