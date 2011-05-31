@@ -4,6 +4,7 @@
 #include <GL/glu.h>
 #include <GL/gl.h>
 #include <GL/glx.h>
+#include <time.h>
 #include "glext.h"
 #include <cmath>
 #include <cstring>
@@ -29,6 +30,9 @@ Cube::Cube()
     _modelViewMatrix(1.0f),
     _projectionMatrix(1.0f)
 {
+  // Seed the rand function
+  srand(time(NULL));
+
   // Initialize OpenGL state
   glClearColor(0.0, 0.0, 0.0, 1.0);
   glClearDepth(1.0);
@@ -155,14 +159,21 @@ void Cube::render(float secondsElapsed)
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
   // rotate cube
-  _modelViewMatrix = glm::rotate(_modelViewMatrix, degrees, glm::vec3(0.0f, 1.0f, 0.0f));
-  _modelViewMatrix = glm::rotate(_modelViewMatrix, degrees/3, glm::vec3(1.0f, 0.0f, 0.0f));
-  _modelViewMatrix = glm::rotate(_modelViewMatrix, degrees/10, glm::vec3(0.0f, 0.0f, 1.0f));
+  _modelViewMatrix = glm::rotate(_modelViewMatrix, degrees, glm::vec3(0.3f, 1.0f, 0.1f));
   glm::mat4 modelViewProjectionMatrix = _projectionMatrix * _modelViewMatrix;
   glUniformMatrix4fv(glGetUniformLocation(_programHandle, "modelViewMatrix"),
 		     1, false, &_modelViewMatrix[0][0]);
   glUniformMatrix4fv(glGetUniformLocation(_programHandle, "modelViewProjectionMatrix"),
 		     1, false, &modelViewProjectionMatrix[0][0]);
+
+  // generate new points this frame.
+  glUniform1i(glGetUniformLocation(_programHandle, "seed"), rand() % 1000000);
+  glUniform1f(glGetUniformLocation(_programHandle, "secondsElapsed"), secondsElapsed);
+  glUniform1f(glGetUniformLocation(_programHandle, "frequencyPerSqUnit"), 500);
+  glUniform1f(glGetUniformLocation(_programHandle, "minAltitude"), 0.0f);
+  glUniform1f(glGetUniformLocation(_programHandle, "maxAltitude"), 0.5f);
+  glUniform1f(glGetUniformLocation(_programHandle, "minRadius"), 5.0);
+  glUniform1f(glGetUniformLocation(_programHandle, "maxRadius"), 15.0);
   
   // draw cube
   glBindVertexArray(_vao);
